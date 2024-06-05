@@ -1,0 +1,64 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.html");
+    exit();
+}
+include 'db.php';
+
+$user_id = $_SESSION['user_id'];
+$stmt = $conn->prepare("SELECT * FROM economia WHERE usuario_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$economias = $result->fetch_all(MYSQLI_ASSOC);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financeiro - Economias</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Economias</h1>
+        <canvas id="economiasChart"></canvas>
+        <ul>
+            <?php foreach ($economias as $economia): ?>
+                <li><?php echo $economia['descricao']; ?> - <?php echo $economia['valor']; ?> - <?php echo $economia['data']; ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <button onclick="window.location.href='add_economia.php'">Adicionar Economia</button>
+    </div>
+    <script>
+        const ctx = document.getElementById('economiasChart').getContext('2d');
+        const economiasChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [<?php foreach ($economias as $economia) { echo '"' . $economia['data'] . '",'; } ?>],
+                datasets: [{
+                    label: 'Economias',
+                    data: [<?php foreach ($economias as $economia) { echo $economia['valor'] . ','; } ?>],
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

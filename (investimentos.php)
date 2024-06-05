@@ -1,0 +1,64 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.html");
+    exit();
+}
+include 'db.php';
+
+$user_id = $_SESSION['user_id'];
+$stmt = $conn->prepare("SELECT * FROM investimento WHERE usuario_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$investimentos = $result->fetch_all(MYSQLI_ASSOC);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financeiro - Investimentos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Investimentos</h1>
+        <canvas id="investimentosChart"></canvas>
+        <ul>
+            <?php foreach ($investimentos as $investimento): ?>
+                <li><?php echo $investimento['nome']; ?> - <?php echo $investimento['valor_atual']; ?> - <?php echo $investimento['retorno']; ?> - <?php echo $investimento['data']; ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <button onclick="window.location.href='add_investimento.php'">Adicionar Investimento</button>
+    </div>
+    <script>
+        const ctx = document.getElementById('investimentosChart').getContext('2d');
+        const investimentosChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [<?php foreach ($investimentos as $investimento) { echo '"' . $investimento['data'] . '",'; } ?>],
+                datasets: [{
+                    label: 'Investimentos',
+                    data: [<?php foreach ($investimentos as $investimento) { echo $investimento['valor_atual'] . ','; } ?>],
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

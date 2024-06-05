@@ -1,0 +1,48 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.html");
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Gasto</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Adicionar Gasto</h1>
+        <form id="addGastoForm">
+            <input type="number" id="valor" placeholder="Valor" required>
+            <input type="date" id="data" required>
+            <input type="text" id="descricao" placeholder="Descrição" required>
+            <button type="submit">Adicionar</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById('addGastoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const valor = document.getElementById('valor').value;
+            const data = document.getElementById('data').value;
+            const descricao = document.getElementById('descricao').value;
+
+            fetch('add_gasto_action.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `valor=${valor}&data=${data}&descricao=${descricao}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                window.location.href = 'gastos.php';
+            });
+        });
+    </script>
+</body>
+</html>
